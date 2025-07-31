@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteo Torneo de Tenis</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 2rem;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .timer {
+      font-size: 2rem;
+      color: #b30000;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .cuadro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .match {
+      padding: 0.5rem;
+      background: #e0e0e0;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sorteo del Torneo de Tenis</h1>
+  <div class="timer" id="temporizador">Cargando temporizador...</div>
+
+  <h2>Cuadro Principal</h2>
+  <div class="cuadro" id="cuadroPrincipal"></div>
+
+  <h2>Cuadro de Consolación</h2>
+  <div class="cuadro" id="cuadroConsolacion"></div>
+
+  <script>
+    const jugadores = [
+      "Valentín Juan", "Carlos González", "Antonio González", "Salvador Vivar",
+      "Elías González", "Rubén Arce", "Héctor Arce", "Carlos Piña",
+      "J. Eduardo Toledo", "Juan Carlos Garcia", "Carmelo Toledo", "Antonio Cañaveras",
+      "Jesús Perea", "David León", "Ramón Campos", "Carlos Simón",
+      "Ramón Solera", "Alberto J. Beltrán", "Víctor Mata", "Jesús Ruiz"
+    ];
+
+    const cabezas = {
+      0: "Valentín Juan",        // 1er cabeza
+      15: "Juan Carlos Garcia",  // 3er cabeza
+      16: "Elías González",      // 2do cabeza
+      31: "David León"           // 4to cabeza
+    };
+
+    let cuadro = Array(32).fill(null);
+    for (const [pos, nombre] of Object.entries(cabezas)) {
+      cuadro[parseInt(pos)] = nombre;
+    }
+
+    const restantes = jugadores.filter(j => !Object.values(cabezas).includes(j));
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function sortear() {
+      shuffle(restantes);
+
+      let idx = 0;
+      for (let i = 0; i < 32; i++) {
+        if (cuadro[i] === null) {
+          cuadro[i] = restantes[idx] || "BYE";
+          idx++;
+        }
+      }
+
+      mostrarCuadro();
+    }
+
+    function mostrarCuadro() {
+      const divPrincipal = document.getElementById("cuadroPrincipal");
+      const divConsolacion = document.getElementById("cuadroConsolacion");
+      divPrincipal.innerHTML = "";
+      divConsolacion.innerHTML = "";
+
+      const perdedores = [];
+
+      for (let i = 0; i < 32; i += 2) {
+        const j1 = cuadro[i];
+        const j2 = cuadro[i + 1];
+        divPrincipal.innerHTML += `<div class="match">${j1} vs ${j2}</div>`;
+        if (j1 !== "BYE" && j2 !== "BYE") {
+          perdedores.push(`Perdedor de: ${j1} vs ${j2}`);
+        }
+      }
+
+      shuffle(perdedores);
+
+      for (let i = 0; i < perdedores.length; i += 2) {
+        const c1 = perdedores[i] || "-";
+        const c2 = perdedores[i + 1] || "-";
+        divConsolacion.innerHTML += `<div class="match">${c1} vs ${c2}</div>`;
+      }
+    }
+
+    function iniciarTemporizador(minutos) {
+      const tiempoObjetivo = new Date(Date.now() + minutos * 60000);
+      const temporizador = document.getElementById("temporizador");
+
+      const intervalo = setInterval(() => {
+        const ahora = new Date();
+        const diferencia = tiempoObjetivo - ahora;
+
+        if (diferencia <= 0) {
+          clearInterval(intervalo);
+          temporizador.innerText = "🎾 Sorteo realizado";
+          sortear();
+        } else {
+          const minutosRestantes = Math.floor(diferencia / 60000);
+          const segundosRestantes = Math.floor((diferencia % 60000) / 1000);
+          temporizador.innerText = `Sorteo en: ${minutosRestantes}m ${segundosRestantes}s`;
+        }
+      }, 1000);
+    }
+
+    // Prueba con 10 minutos (puedes cambiar a 60*14 para las 14:00)
+    iniciarTemporizador(10);
+  </script>
+</body>
+</html>
