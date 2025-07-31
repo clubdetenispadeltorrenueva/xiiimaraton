@@ -1,97 +1,98 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sorteo Torneo de Tenis</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
       padding: 2rem;
     }
     h1, h2 {
       text-align: center;
+      margin-bottom: 1rem;
     }
     .timer {
-      font-size: 2rem;
-      color: #b30000;
       text-align: center;
+      font-size: 1.5rem;
+      color: #d9534f;
       margin-bottom: 2rem;
     }
     .cuadro {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto 3rem;
-      background: #fff;
-      padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .match {
-      padding: 0.5rem;
-      background: #e0e0e0;
-      border-radius: 5px;
+      background: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
-  <h1>Sorteo del Torneo de Tenis</h1>
+  <h1>Sorteo Torneo de Tenis</h1>
   <div class="timer" id="temporizador">Cargando temporizador...</div>
 
-  <h2>Cuadro Principal</h2>
-  <div class="cuadro" id="cuadroPrincipal"></div>
+  <div id="contenido" style="display: none">
+    <h2>Cuadro Principal</h2>
+    <div class="cuadro" id="cuadroPrincipal"></div>
 
-  <h2>Cuadro de Consolación</h2>
-  <div class="cuadro" id="cuadroConsolacion"></div>
+    <h2>Cuadro de Consolación</h2>
+    <div class="cuadro" id="cuadroConsolacion"></div>
+  </div>
 
   <script>
     const jugadores = [
       "Valentín Juan", "Carlos González", "Antonio González", "Salvador Vivar",
       "Elías González", "Rubén Arce", "Héctor Arce", "Carlos Piña",
       "J. Eduardo Toledo", "Juan Carlos Garcia", "Carmelo Toledo", "Antonio Cañaveras",
-      "Jesús Perea", "David León", "Ramón Campos", "Carlos Simón",
+      "Jesus Perea", "David León", "Ramón Campos", "Carlos Simón",
       "Ramón Solera", "Alberto J. Beltrán", "Víctor Mata", "Jesús Ruiz"
     ];
 
     const cabezas = {
-      0: "Valentín Juan",        // 1er cabeza
-      15: "Juan Carlos Garcia",  // 3er cabeza
-      16: "Elías González",      // 2do cabeza
-      31: "David León"           // 4to cabeza
+      0: "Valentín Juan",
+      15: "Juan Carlos Garcia",
+      16: "Elías González",
+      31: "David León"
     };
 
-    let cuadro = Array(32).fill(null);
-    for (const [pos, nombre] of Object.entries(cabezas)) {
-      cuadro[parseInt(pos)] = nombre;
-    }
-
-    const restantes = jugadores.filter(j => !Object.values(cabezas).includes(j));
-
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    function crearCuadro() {
+      const cuadro = Array(32).fill(null);
+      for (const [pos, nombre] of Object.entries(cabezas)) {
+        cuadro[parseInt(pos)] = nombre;
       }
-    }
 
-    function sortear() {
+      const restantes = jugadores.filter(j => !Object.values(cabezas).includes(j));
+      const BYEs = 32 - jugadores.length;
+      for (let i = 0; i < BYEs; i++) restantes.push("BYE");
+
       shuffle(restantes);
-
       let idx = 0;
       for (let i = 0; i < 32; i++) {
         if (cuadro[i] === null) {
-          cuadro[i] = restantes[idx] || "BYE";
-          idx++;
+          cuadro[i] = restantes[idx++];
         }
       }
 
-      mostrarCuadro();
+      return cuadro;
     }
 
-    function mostrarCuadro() {
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function mostrarCuadro(cuadro) {
       const divPrincipal = document.getElementById("cuadroPrincipal");
       const divConsolacion = document.getElementById("cuadroConsolacion");
       divPrincipal.innerHTML = "";
@@ -102,9 +103,9 @@
       for (let i = 0; i < 32; i += 2) {
         const j1 = cuadro[i];
         const j2 = cuadro[i + 1];
-        divPrincipal.innerHTML += `<div class="match">${j1} vs ${j2}</div>`;
+        divPrincipal.innerHTML += `<div class="match">Partido ${(i/2)+1}: ${j1} vs ${j2}</div>`;
         if (j1 !== "BYE" && j2 !== "BYE") {
-          perdedores.push(`Perdedor de: ${j1} vs ${j2}`);
+          perdedores.push(`Perdedor de Partido ${(i/2)+1}`);
         }
       }
 
@@ -117,28 +118,34 @@
       }
     }
 
-    function iniciarTemporizador(minutos) {
-      const tiempoObjetivo = new Date(Date.now() + minutos * 60000);
+    function iniciarTemporizador(horaObjetivo) {
       const temporizador = document.getElementById("temporizador");
+      const contenido = document.getElementById("contenido");
 
       const intervalo = setInterval(() => {
         const ahora = new Date();
-        const diferencia = tiempoObjetivo - ahora;
+        const diferencia = horaObjetivo - ahora;
 
         if (diferencia <= 0) {
           clearInterval(intervalo);
           temporizador.innerText = "🎾 Sorteo realizado";
-          sortear();
+          contenido.style.display = "block";
+          const cuadro = crearCuadro();
+          mostrarCuadro(cuadro);
         } else {
-          const minutosRestantes = Math.floor(diferencia / 60000);
-          const segundosRestantes = Math.floor((diferencia % 60000) / 1000);
-          temporizador.innerText = `Sorteo en: ${minutosRestantes}m ${segundosRestantes}s`;
+          const minutos = Math.floor(diferencia / 60000);
+          const segundos = Math.floor((diferencia % 60000) / 1000);
+          temporizador.innerText = `Sorteo en: ${minutos}m ${segundos}s`;
         }
       }, 1000);
     }
 
-    // Prueba con 10 minutos (puedes cambiar a 60*14 para las 14:00)
-    iniciarTemporizador(1);
+    // Hora fija: hoy a las 9:30 hora local
+    const ahora = new Date();
+    const hoy930 = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 9, 30, 0);
+    if (ahora > hoy930) hoy930.setDate(hoy930.getDate() + 1); // Si ya pasó, será mañana
+
+    iniciarTemporizador(hoy930);
   </script>
 </body>
 </html>
